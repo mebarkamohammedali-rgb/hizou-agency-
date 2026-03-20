@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Cairo", ui-sans-serif, system-ui, sans-serif;
+  --color-brand: #F07020;
+  --color-bg-deep: #1A1A1A;
+  --color-bg-surface: #2A2A2A;
+  --color-text-warm: #F5F5F0;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  .grid-lines {
+    background-image: 
+      linear-gradient(to right, rgba(240, 112, 32, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(240, 112, 32, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .glass-nav {
+    @apply bg-[#1A1A1A]/80 backdrop-blur-md border-b border-white/5;
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(100%); }
+  }
+
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+}
