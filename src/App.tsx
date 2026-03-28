@@ -1,566 +1,1265 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  motion, 
+  AnimatePresence, 
+  useScroll, 
+  useTransform, 
+  useInView
+} from 'motion/react';
+import { 
+  Menu, 
+  X, 
+  Mic, 
+  Video, 
+  Clapperboard, 
+  Smartphone, 
+  Code2, 
+  Megaphone,
+  Instagram, 
+  Twitter, 
+  Linkedin, 
+  Play,
+  Globe,
+  Zap,
+  Shield,
+  Layers,
+  Sparkles,
+  ArrowUpRight,
+  Plus,
+  ChevronRight,
+  ArrowLeft,
+  Camera,
+  Scissors,
+  User,
+  MessageCircle,
+  MapPin,
+  Phone,
+  Mail,
+  Send,
+  Languages,
+  Star
+} from 'lucide-react';
+import { Chatbot } from './components/Chatbot';
 
-import { useEffect, useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+// --- Types ---
+type Language = 'ar' | 'fr';
 
-// --- Icons (Inline SVGs) ---
-const Icons = {
-  Menu: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg>
-  ),
-  Close: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-  ),
-  Social: {
-    Instagram: () => (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-    ),
-    Facebook: () => (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
-    ),
-    TikTok: () => (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path></svg>
-    ),
-    LinkedIn: () => (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
-    ),
-    WhatsApp: () => (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-11.7 8.38 8.38 0 0 1 3.8.9L21 3z"></path></svg>
-    )
+const translations = {
+  ar: {
+    home: 'الرئيسية',
+    services: 'خدماتنا',
+    testimonials: 'آراء العملاء',
+    contact: 'تواصل',
+    bookConsultation: 'احجز جلسة تصوير',
+    heroTexts: ["نصنع مشاهد تبقى في الذاكرة", "نحوّل أفكارك إلى واقع", "محتوى بصري يأسر الجمهور"],
+    heroSub: 'من التصوير الاحترافي إلى المونتاج الإبداعي — نحوّل أفكارك إلى محتوى بصري يأسر الجمهور',
+    discoverServices: 'شاهد أعمالنا',
+    bookPhotoshoot: 'احجز جلسة تصوير',
+    scrollDown: 'اسحب للأسفل',
+    aboutText: 'وكالة HIZOU شريكك الإبداعي للتميز البصري، <br /> نوثّق لحظاتك ونحوّل رؤيتك إلى محتوى احترافي يأسر القلوب والعقول.',
+    projectsDelivered: 'فيديو منتج',
+    experienceText: 'خبرتنا في صناعة المحتوى البصري مكنتنا من بناء قصص نجاح حقيقية مع كبرى العلامات التجارية.',
+    happyClients: 'عميل راضٍ',
+    followers: 'متابع',
+    yearsExperience: 'سنوات خبرة',
+    support: 'دعم فني متواصل',
+    whatsappText: 'مرحباً HIZOU، أريد الاستفسار عن خدمات التصوير والمونتاج',
+    contactNow: 'تواصل الآن',
+    ourTeam: 'فريقنا',
+    teamDesc: 'خبراء في صناعة المحتوى والتصوير الاحترافي',
+    servicesTitle: 'رؤية متكاملة للتميز البصري',
+    integrated: 'متكاملة',
+    servicesSub: 'نقدم حلولاً بصرية مبتكرة من التصوير إلى المونتاج لتمكين علامتك من الوصول إلى أقصى إمكانياتها.',
+    testimonialsTitle: 'ثقة عملائنا هي سر نجاحنا',
+    testimonialsSub: 'سر نجاحنا',
+    whatTheySay: 'قالوا عنا',
+    readyToGrow: 'جاهز للتألق؟',
+    growth: 'للتألق؟',
+    ctaSub: 'انضم إلى قائمة عملائنا الناجحين وابدأ رحلة التميز البصري لعلامتك التجارية اليوم.',
+    startProject: 'ابدأ مشروعك الآن',
+    startJourney: 'لنبدأ رحلتك',
+    journey: 'رحلتك',
+    fullName: 'الاسم الكامل',
+    email: 'البريد الإلكتروني',
+    namePlaceholder: 'محمد علي',
+    servicesList: [
+      { id: 'filming', title: 'التصوير الاحترافي', description: 'نوثّق لحظاتك بعدسة احترافية تعكس هوية علامتك التجارية بدقة.', number: '(1)', image: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&q=80&w=800' },
+      { id: 'editing', title: 'مونتاج الفيديو', description: 'نحوّل اللقطات الخام إلى قصص بصرية مؤثرة تجذب الجمهور.', number: '(2)', image: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&q=80&w=800' },
+      { id: 'ugc', title: 'محتوى UGC', description: 'محتوى واقعي وأصيل يبني ثقة جمهورك ويعزز مصداقية علامتك.', number: '(3)', image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=800' },
+      { id: 'voiceover', title: 'تعليق صوتي احترافي', description: 'أصوات تضيف روحاً وتأثيراً لكل محتوى بصري ننتجه.', number: '(4)', image: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&q=80&w=800' },
+      { id: 'creative-ads', title: 'كرياتيف Ads', description: 'إعلانات إبداعية تجذب الانتباه وتحقق أفضل النتائج التسويقية.', number: '(5)', image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=800' },
+      { id: 'sponsored-ads', title: 'سبونسر Ads', description: 'حملات مدفوعة موجهة تضاعف وصولك وتزيد من مبيعاتك.', number: '(6)', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800' },
+    ]
   },
-  Services: {
-    SocialMedia: () => (
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-    ),
-    Ads: () => (
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-    ),
-    Design: () => (
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
-    ),
-    Content: () => (
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-    ),
-    SEO: () => (
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-    ),
-    Web: () => (
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-    )
-  },
-  Chevron: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-  ),
-  Star: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="#F07020" stroke="#F07020" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-  )
+  fr: {
+    home: 'Accueil',
+    services: 'Services',
+    testimonials: 'Témoignages',
+    contact: 'Contact',
+    bookConsultation: 'Réserver un tournage',
+    heroTexts: ["Nous créons des scènes mémorables", "Nous transformons vos idées", "Un contenu visuel captivant"],
+    heroSub: 'Du tournage professionnel au montage créatif — nous transformons vos idées en contenu visuel captivant',
+    discoverServices: 'Voir nos travaux',
+    bookPhotoshoot: 'Réserver un tournage',
+    scrollDown: 'Défiler',
+    aboutText: "L'agence HIZOU est votre partenaire créatif pour l'excellence visuelle. <br /> Nous documentons vos moments et transformons votre vision en contenu professionnel.",
+    projectsDelivered: 'Vidéos produites',
+    experienceText: 'Notre expérience dans la création de contenu visuel nous a permis de bâtir de véritables success stories.',
+    happyClients: 'Clients satisfaits',
+    followers: 'Abonnés',
+    yearsExperience: 'Années d\'expérience',
+    support: 'Support technique continu',
+    whatsappText: 'Bonjour HIZOU, je souhaite me renseigner sur vos services de tournage et montage',
+    contactNow: 'Contactez-nous',
+    ourTeam: 'Notre Équipe',
+    teamDesc: 'Experts en création de contenu et tournage professionnel',
+    servicesTitle: 'Une vision intégrée pour l\'excellence visuelle',
+    integrated: 'intégrée',
+    servicesSub: 'Nous proposons des solutions visuelles innovantes du tournage au montage pour propulser votre marque.',
+    testimonialsTitle: 'La confiance de nos clients est le secret de notre succès',
+    testimonialsSub: 'notre succès',
+    whatTheySay: 'Témoignages',
+    readyToGrow: 'Prêt à briller ?',
+    growth: 'briller ?',
+    ctaSub: 'Rejoignez nos clients satisfaits et commencez dès aujourd\'hui votre voyage vers l\'excellence visuelle.',
+    startProject: 'Commencez votre projet',
+    startJourney: 'Commençons votre voyage',
+    journey: 'voyage',
+    fullName: 'Nom Complet',
+    email: 'E-mail',
+    namePlaceholder: 'Mohamed Ali',
+    servicesList: [
+      { id: 'filming', title: 'Tournage Professionnel', description: 'Nous documentons vos moments avec une lentille professionnelle qui reflète votre identité.', number: '(1)', image: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&q=80&w=800' },
+      { id: 'editing', title: 'Montage Vidéo', description: 'Nous transformons les séquences brutes en histoires visuelles percutantes.', number: '(2)', image: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&q=80&w=800' },
+      { id: 'ugc', title: 'Contenu UGC', description: 'Un contenu réaliste et authentique qui renforce la confiance de votre audience.', number: '(3)', image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=800' },
+      { id: 'voiceover', title: 'Voice-over Professionnel', description: 'Des voix qui ajoutent de l\'âme et de l\'impact à chaque contenu visuel.', number: '(4)', image: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&q=80&w=800' },
+      { id: 'creative-ads', title: 'Creative Ads', description: 'Des publicités créatives qui attirent l\'attention et génèrent des résultats.', number: '(5)', image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=800' },
+      { id: 'sponsored-ads', title: 'Sponsored Ads', description: 'Campagnes payantes ciblées qui doublent votre portée et vos ventes.', number: '(6)', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800' },
+    ]
+  }
 };
+
+interface Service {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  number: string;
+  image: string;
+}
+
+interface Project {
+  id: string;
+  title: string;
+  category: string;
+  image: string;
+  year: string;
+  results: string;
+}
+
+interface Testimonial {
+  id: string;
+  quote: string;
+  author: string;
+  company: string;
+  rating: number;
+  caseStudyUrl?: string;
+}
 
 // --- Components ---
 
-const Counter = ({ end, suffix = "", duration = 2000 }) => {
-  const [count, setCount] = useState(0);
-  const elementRef = useRef(null);
-  const [hasStarted, setHasStarted] = useState(false);
+const TypingText = ({ texts }: { texts: string[] }) => {
+  const [index, setIndex] = useState(0);
+  const [displayText, setDisplayText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [speed, setSpeed] = useState(150);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !hasStarted) {
-          setHasStarted(true);
-        }
-      },
-      { threshold: 0.5 }
-    );
+    const handleTyping = () => {
+      const currentText = texts[index];
+      if (isDeleting) {
+        setDisplayText(currentText.substring(0, displayText.length - 1));
+        setSpeed(50);
+      } else {
+        setDisplayText(currentText.substring(0, displayText.length + 1));
+        setSpeed(150);
+      }
 
-    if (elementRef.current) observer.observe(elementRef.current);
-    return () => observer.disconnect();
-  }, [hasStarted]);
-
-  useEffect(() => {
-    if (!hasStarted) return;
-
-    let startTime = null;
-    const step = (timestamp) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      setCount(Math.floor(progress * end));
-      if (progress < 1) {
-        window.requestAnimationFrame(step);
+      if (!isDeleting && displayText === currentText) {
+        setTimeout(() => setIsDeleting(true), 1500);
+      } else if (isDeleting && displayText === "") {
+        setIsDeleting(false);
+        setIndex((prev) => (prev + 1) % texts.length);
       }
     };
-    window.requestAnimationFrame(step);
-  }, [hasStarted, end, duration]);
 
-  return <span ref={elementRef}>{count}{suffix}</span>;
-};
-
-const Reveal = ({ children, delay = 0 }) => {
-  const ref = useRef(null);
-  const [isActive, setIsActive] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => setIsActive(true), delay);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [delay]);
+    const timer = setTimeout(handleTyping, speed);
+    return () => clearTimeout(timer);
+  }, [displayText, isDeleting, index, texts, speed]);
 
   return (
-    <div ref={ref} className={`reveal ${isActive ? 'active' : ''}`}>
-      {children}
+    <span className="relative">
+      {displayText}
+      <span className="w-2 h-12 md:h-20 bg-brand absolute -right-4 animate-pulse" />
+    </span>
+  );
+};
+
+const Particles = () => {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {[...Array(20)].map((_, i) => (
+        <motion.div
+          key={i}
+          initial={{ 
+            x: Math.random() * 100 + "%", 
+            y: Math.random() * 100 + "%",
+            opacity: Math.random() * 0.5 + 0.2
+          }}
+          animate={{ 
+            x: [
+              Math.random() * 100 + "%", 
+              Math.random() * 100 + "%", 
+              Math.random() * 100 + "%"
+            ],
+            y: [
+              Math.random() * 100 + "%", 
+              Math.random() * 100 + "%", 
+              Math.random() * 100 + "%"
+            ]
+          }}
+          transition={{ 
+            duration: Math.random() * 20 + 10, 
+            repeat: Infinity, 
+            ease: "linear" 
+          }}
+          className={`absolute rounded-full blur-[1px] ${
+            i % 3 === 0 ? 'w-1 h-1 bg-white/40' : 
+            i % 3 === 1 ? 'w-3 h-3 bg-brand/30' : 
+            'w-2 h-2 bg-brand'
+          }`}
+        />
+      ))}
     </div>
   );
 };
 
-export default function App() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showBackToTop, setShowBackToTop] = useState(false);
-  const [formStatus, setFormStatus] = useState(null); // 'submitting', 'success'
+const Confetti = () => {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {[...Array(30)].map((_, i) => (
+        <div
+          key={i}
+          className="confetti"
+          style={{
+            left: Math.random() * 100 + "%",
+            animationDelay: Math.random() * 5 + "s",
+            backgroundColor: i % 3 === 0 ? "#F07020" : i % 3 === 1 ? "#FFFFFF" : "#d4601a",
+            width: Math.random() * 8 + 4 + "px",
+            height: Math.random() * 8 + 4 + "px",
+            borderRadius: Math.random() > 0.5 ? "50%" : "0%"
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+const NetworkParticles = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-      setShowBackToTop(window.scrollY > 300);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    let particles: Particle[] = [];
+    const particleCount = 30;
+
+    class Particle {
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      size: number;
+
+      constructor(width: number, height: number) {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.size = Math.random() * 2 + 1;
+      }
+
+      update(width: number, height: number) {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < 0 || this.x > width) this.vx *= -1;
+        if (this.y < 0 || this.y > height) this.vy *= -1;
+      }
+
+      draw(ctx: CanvasRenderingContext2D) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(240, 112, 32, 0.6)';
+        ctx.fill();
+      }
+    }
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      particles = [];
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle(canvas.width, canvas.height));
+      }
     };
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particles.forEach((p, i) => {
+        p.update(canvas.width, canvas.height);
+        p.draw(ctx);
+
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dx = p.x - p2.x;
+          const dy = p.y - p2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 150) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(240, 112, 32, ${0.2 * (1 - dist / 150)})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+      });
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    window.addEventListener('resize', resize);
+    resize();
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="absolute inset-0 z-0 pointer-events-none" />;
+};
+
+const DashboardWidget = () => {
+  const [followers, setFollowers] = useState(2400);
+  const [data, setData] = useState([30, 40, 35, 50, 45, 60, 55]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFollowers(prev => prev + Math.floor(Math.random() * 10));
+      setData(prev => [...prev.slice(1), prev[prev.length - 1] + (Math.random() - 0.5) * 20]);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, x: 50 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="absolute top-24 right-6 md:right-12 z-20 bg-bg-surface/80 backdrop-blur-md border border-white/10 p-4 rounded-xl shadow-2xl w-48 hidden lg:block"
+    >
+      <div className="flex justify-between items-center mb-3">
+        <div className="w-2 h-2 rounded-full bg-brand animate-pulse" />
+        <span className="text-[10px] uppercase tracking-widest text-white/40">Live Dashboard</span>
+      </div>
+      <div className="mb-4">
+        <div className="text-xl font-black text-white">+{followers.toLocaleString()}</div>
+        <div className="text-[9px] text-brand/80">Followers today</div>
+      </div>
+      <div className="h-12 flex items-end gap-1">
+        {data.map((val, i) => (
+          <motion.div 
+            key={i}
+            animate={{ height: `${Math.max(10, Math.min(100, val))}%` }}
+            className="flex-1 bg-brand/40 rounded-t-sm"
+          />
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
+const FloatingDigitalIcons = () => {
+  const icons = [
+    { icon: <Layers size={24} />, delay: 0, x: '10%', y: '20%' },
+    { icon: <Smartphone size={24} />, delay: 2, x: '80%', y: '15%' },
+    { icon: <Zap size={24} />, delay: 1, x: '15%', y: '70%' },
+    { icon: <Play size={24} />, delay: 3, x: '75%', y: '75%' },
+    { icon: <Sparkles size={24} />, delay: 1.5, x: '85%', y: '40%' },
+    { icon: <MessageCircle size={24} />, delay: 2.5, x: '5%', y: '45%' },
+  ];
+
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+      {icons.map((item, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, x: item.x, y: item.y }}
+          animate={{ 
+            opacity: [0.2, 0.5, 0.2],
+            y: ['-20px', '20px', '-20px'],
+            rotate: [0, 10, -10, 0]
+          }}
+          transition={{ 
+            duration: 5 + Math.random() * 5, 
+            repeat: Infinity, 
+            delay: item.delay,
+            ease: "easeInOut" 
+          }}
+          className="absolute text-brand/30"
+          style={{ left: item.x, top: item.y }}
+        >
+          {item.icon}
+        </motion.div>
+      ))}
+    </div>
+  );
+};
+
+const DigitalGrid = () => {
+  return (
+    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 bg-[#0A0A0A]" />
+      <div 
+        className="absolute inset-0 opacity-[0.15]"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(240,112,32,0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(240,112,32,0.1) 1px, transparent 1px)
+          `,
+          backgroundSize: '60px 60px',
+          animation: 'grid-move 20s linear infinite'
+        }}
+      />
+      <div 
+        className="absolute inset-0 opacity-40"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(240,112,32,0.4) 2px, transparent 2px),
+            linear-gradient(to bottom, rgba(240,112,32,0.4) 2px, transparent 2px)
+          `,
+          backgroundSize: '300px 300px',
+          animation: 'grid-move 15s linear infinite'
+        }}
+      />
+    </div>
+  );
+};
+
+const Reveal = ({ children, width = "fit-content", delay = 0 }: { children: React.ReactNode, width?: "fit-content" | "100%", delay?: number }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+
+  return (
+    <div ref={ref} style={{ position: "relative", width, overflow: "hidden" }}>
+      <motion.div
+        variants={{
+          hidden: { opacity: 0, y: 75 },
+          visible: { opacity: 1, y: 0 },
+        }}
+        initial="hidden"
+        animate={isInView ? "visible" : "hidden"}
+        transition={{ duration: 0.8, delay: delay, ease: [0.22, 1, 0.36, 1] }}
+      >
+        {children}
+      </motion.div>
+    </div>
+  );
+};
+
+const Counter = ({ value, duration = 2, suffix = "" }: { value: number, duration?: number, suffix?: string }) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+
+  useEffect(() => {
+    if (isInView) {
+      let start = 0;
+      const end = value;
+      const totalMiliseconds = duration * 1000;
+      const incrementTime = totalMiliseconds / end;
+
+      const timer = setInterval(() => {
+        start += 1;
+        setCount(start);
+        if (start === end) clearInterval(timer);
+      }, Math.max(incrementTime, 10));
+
+      return () => clearInterval(timer);
+    }
+  }, [isInView, value, duration]);
+
+  return <span ref={ref} className="drop-shadow-[0_0_10px_rgba(240,112,32,0.3)]">{count}{suffix}</span>;
+};
+
+const CustomCursor = () => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
+
+  useEffect(() => {
+    const moveCursor = (e: MouseEvent) => {
+      setPosition({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleHover = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('button, a, .hover-target')) {
+        setIsHovering(true);
+      } else {
+        setIsHovering(false);
+      }
+    };
+
+    window.addEventListener('mousemove', moveCursor);
+    window.addEventListener('mouseover', handleHover);
+    return () => {
+      window.removeEventListener('mousemove', moveCursor);
+      window.removeEventListener('mouseover', handleHover);
+    };
+  }, []);
+
+  return (
+    <>
+      <div 
+        className="custom-cursor" 
+        style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
+      />
+      <div 
+        className={`cursor-follower ${isHovering ? 'scale-150 bg-white/10 border-transparent' : ''}`}
+        style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
+      />
+    </>
+  );
+};
+
+const LanguageSwitcher = ({ lang, setLang }: { lang: Language, setLang: (l: Language) => void }) => {
+  return (
+    <div 
+      onClick={() => setLang(lang === 'ar' ? 'fr' : 'ar')}
+      className="relative w-14 h-7 bg-white/5 border border-white/10 rounded-full cursor-pointer p-1 flex items-center transition-all duration-300 hover:border-brand/50 group"
+    >
+      <motion.div 
+        layout
+        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        className={`w-5 h-5 bg-brand rounded-full flex items-center justify-center text-[8px] font-black text-white shadow-[0_0_10px_rgba(240,112,32,0.5)] ${lang === 'ar' ? 'ml-0' : 'ml-7'}`}
+      >
+        <Languages size={10} />
+      </motion.div>
+      <div className="absolute inset-0 flex justify-between px-2.5 items-center pointer-events-none">
+        <span className={`text-[8px] font-black transition-opacity duration-300 ${lang === 'ar' ? 'opacity-0' : 'opacity-40'}`}>AR</span>
+        <span className={`text-[8px] font-black transition-opacity duration-300 ${lang === 'fr' ? 'opacity-0' : 'opacity-40'}`}>FR</span>
+      </div>
+    </div>
+  );
+};
+
+const Navbar = ({ lang, setLang }: { lang: Language, setLang: (l: Language) => void }) => {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const t = translations[lang];
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormStatus('submitting');
-    setTimeout(() => {
-      setFormStatus('success');
-    }, 1500);
-  };
-
   const navLinks = [
-    { name: 'الرئيسية', href: '#' },
-    { name: 'خدماتنا', href: '#services' },
-    { name: 'أعمالنا', href: '#case-study' },
-    { name: 'من نحن', href: '#why-hizou' },
-    { name: 'تواصل', href: '#contact' },
+    { name: t.home, href: '#' },
+    { name: t.services, href: '#services' },
+    { name: t.testimonials, href: '#testimonials' },
+    { name: t.contact, href: '#contact' },
   ];
 
   return (
-    <div className="min-h-screen selection:bg-brand selection:text-white">
-      {/* --- Navbar --- */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'glass-nav py-3' : 'bg-transparent py-6'}`}>
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <div className="text-2xl font-bold tracking-tighter flex items-center gap-1">
-            <span className="text-white">H</span>
-            <span className="text-brand">✦</span>
-            <span className="text-white">IZOU</span>
-          </div>
-
-          {/* Desktop Links */}
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a key={link.name} href={link.href} className="text-sm font-medium text-white/80 hover:text-brand transition-colors">
-                {link.name}
-              </a>
+    <header className="fixed top-0 left-0 w-full z-50">
+      <nav 
+        className={`transition-all duration-500 ${
+          isScrolled 
+            ? 'bg-bg-deep/80 backdrop-blur-xl border-b border-white/10' 
+            : 'bg-transparent'
+        }`}
+        style={{ padding: '12px 24px' }}
+      >
+      <div className="container mx-auto px-6 flex flex-row-reverse justify-between items-center">
+        <div className="hidden md:flex items-center gap-8 flex-row-reverse">
+          <div className="flex items-center gap-12 flex-row-reverse">
+            {navLinks.map((item, i) => (
+              <motion.a
+                key={item.name}
+                href={item.href}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="text-sm font-medium tracking-widest hover:text-brand transition-colors"
+              >
+                {item.name}
+              </motion.a>
             ))}
           </div>
-
-          <div className="hidden md:block">
-            <button className="bg-brand hover:bg-brand/90 text-white px-6 py-2.5 rounded-full text-sm font-bold transition-all transform hover:scale-105">
-              استشارة مجانية
-            </button>
+          
+          <div className="flex items-center gap-4">
+            <LanguageSwitcher lang={lang} setLang={setLang} />
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="px-8 py-3 bg-white text-bg-deep text-xs font-bold uppercase tracking-widest rounded-full hover:bg-brand hover:text-white transition-all duration-300 shadow-lg shadow-white/10"
+            >
+              {t.bookConsultation}
+            </motion.button>
           </div>
-
-          {/* Mobile Toggle */}
-          <button className="md:hidden text-white" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <Icons.Close /> : <Icons.Menu />}
-          </button>
         </div>
 
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="absolute top-full left-0 right-0 bg-bg-deep border-b border-white/5 p-6 md:hidden"
-            >
-              <div className="flex flex-col gap-4">
-                {navLinks.map((link) => (
-                  <a
-                    key={link.name}
-                    href={link.href}
-                    onClick={() => setIsMenuOpen(false)}
-                    className="text-lg font-medium text-white/80 hover:text-brand"
-                  >
-                    {link.name}
-                  </a>
-                ))}
-                <button className="bg-brand text-white w-full py-4 rounded-xl font-bold mt-4">
-                  استشارة مجانية
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <button className="md:hidden text-white" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          {isMenuOpen ? <X /> : <Menu />}
+        </button>
+
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="logo flex items-center"
+          style={{ display: 'flex', alignItems: 'center' }}
+        >
+          <div style={{
+            background: '#F07020',
+            borderRadius: '10px',
+            padding: '4px 10px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <img 
+              src="https://i.imgur.com/QZigE0P.png" 
+              alt="HIZOU Agency"
+              style={{
+                height: '32px',
+                width: 'auto',
+                display: 'block',
+                filter: 'brightness(0) invert(1)',
+              }}
+            />
+          </div>
+        </motion.div>
+      </div>
       </nav>
 
-      {/* --- Hero --- */}
-      <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
-        <div className="absolute inset-0 grid-lines -z-10"></div>
-        <div className="absolute top-1/4 -right-20 w-96 h-96 bg-brand/10 blur-[120px] rounded-full"></div>
-        
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
-          <Reveal>
-            <div className="relative">
-              {/* Decorative Wing SVG */}
-              <div className="absolute -right-12 -top-12 text-brand/20 animate-pulse hidden lg:block">
-                <svg width="120" height="120" viewBox="0 0 100 100" fill="currentColor">
-                  <path d="M0 0 L100 50 L0 100 L20 50 Z" />
-                </svg>
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-bg-surface border-b border-white/5 overflow-hidden"
+          >
+            <div className={`flex flex-col p-6 gap-6 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
+              {navLinks.map((item) => (
+                <a key={item.name} href={item.href} className="text-lg" onClick={() => setIsMenuOpen(false)}>
+                  {item.name}
+                </a>
+              ))}
+              <div className="pt-4 border-t border-white/5">
+                <LanguageSwitcher lang={lang} setLang={setLang} />
               </div>
-              
-              <h1 className="text-5xl md:text-7xl font-black leading-[1.1] mb-6">
-                نُحرّك علامتك التجارية <br />
-                <span className="text-brand">بسرعة الضوء</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
+  );
+};
+
+const BottomNav = ({ lang, setLang }: { lang: Language, setLang: (l: Language) => void }) => {
+  const t = translations[lang];
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 md:hidden w-[95%] bg-bg-surface/80 backdrop-blur-xl border border-white/10 rounded-full p-2 flex justify-around items-center shadow-2xl">
+      {[
+        { icon: <Globe size={20} />, label: t.home, href: '#' },
+        { icon: <Layers size={20} />, label: t.services, href: '#services' },
+        { icon: <Sparkles size={20} />, label: t.testimonials, href: '#testimonials' },
+        { icon: <Phone size={20} />, label: t.contact, href: '#contact' },
+      ].map((item, i) => (
+        <a key={i} href={item.href} className="flex flex-col items-center gap-1 p-2 text-white/60 hover:text-brand transition-colors">
+          {item.icon}
+          <span className="text-[8px] font-bold uppercase tracking-widest">{item.label}</span>
+        </a>
+      ))}
+      <div className="h-8 w-[1px] bg-white/10 mx-1" />
+      <LanguageSwitcher lang={lang} setLang={setLang} />
+    </div>
+  );
+};
+
+// --- Main App ---
+
+export default function App() {
+  const [lang, setLang] = useState<Language>('ar');
+
+  useEffect(() => {
+    if (lang === 'fr') {
+      document.documentElement.classList.add('lang-fr');
+    } else {
+      document.documentElement.classList.remove('lang-fr');
+    }
+  }, [lang]);
+
+  const t = translations[lang];
+  const { scrollYProgress } = useScroll();
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
+  const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
+
+  const services: Service[] = t.servicesList.map(s => ({
+    ...s,
+    icon: s.id === 'voiceover' ? <Mic /> : 
+          s.id === 'filming' ? <Video /> : 
+          s.id === 'editing' ? <Clapperboard /> : 
+          s.id === 'ugc' ? <Smartphone /> : 
+          s.id === 'web' ? <Code2 /> : <Megaphone />
+  }));
+
+  const projects: Project[] = [
+    { id: 'ecommerce', title: lang === 'ar' ? 'متجر إلكتروني للملابس' : 'E-commerce de vêtements', category: lang === 'ar' ? 'تجارة إلكترونية' : 'E-commerce', image: '', year: '2024', results: '+300% مبيعات' },
+    { id: 'food-app', title: lang === 'ar' ? 'تطبيق توصيل طعام' : 'App de livraison de nourriture', category: lang === 'ar' ? 'تطبيقات جوال' : 'Apps Mobiles', image: '', year: '2023', results: '50k تحميل' },
+    { id: 'real-estate', title: lang === 'ar' ? 'شركة خدمات عقارية' : 'Agence immobilière', category: lang === 'ar' ? 'عقارات' : 'Immobilier', image: '', year: '2024', results: '500+ عميل محتمل' },
+  ];
+
+  const testimonials: Testimonial[] = lang === 'ar' ? [
+    {
+      id: '1',
+      quote: "شغل تصوير احترافي جداً، اللقطات طلعت فوق التوقعات. ننصح بهم بدون تردد",
+      author: "كريم بوعلام",
+      company: "صاحب متجر ملابس — الجزائر العاصمة",
+      rating: 5
+    },
+    {
+      id: '2',
+      quote: "المونتاج كان رائع، الفيديو الترويجي ضاعف طلباتنا في أول أسبوع من نشره",
+      author: "أمينة حداد",
+      company: "مديرة مطعم — وهران",
+      rating: 5
+    },
+    {
+      id: '3',
+      quote: "فريق جدي ومحترف، سلّموا في الوقت وبجودة عالية. سنتعامل معهم مستقبلاً",
+      author: "يوسف مرابط",
+      company: "مدير وكالة عقارية — قسنطينة",
+      rating: 5
+    }
+  ] : [
+    {
+      id: '1',
+      quote: "Travail de tournage très professionnel, les prises de vue ont dépassé les attentes. Je les recommande sans hésitation",
+      author: "Karim Boualam",
+      company: "Propriétaire d'un magasin de vêtements — Alger",
+      rating: 5
+    },
+    {
+      id: '2',
+      quote: "Le montage était superbe, la vidéo promotionnelle a doublé nos commandes dès la première semaine de sa publication",
+      author: "Amina Haddad",
+      company: "Directrice de restaurant — Oran",
+      rating: 5
+    },
+    {
+      id: '3',
+      quote: "Une équipe sérieuse et professionnelle, ils ont livré à temps et avec une grande qualité. Nous traiterons avec eux à l'avenir",
+      author: "Youssef Merabet",
+      company: "Directeur d'agence immobilière — Constantine",
+      rating: 5
+    }
+  ];
+
+  return (
+    <div className="relative min-h-screen" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+      <CustomCursor />
+      <Navbar lang={lang} setLang={setLang} />
+      <BottomNav lang={lang} setLang={setLang} />
+
+      {/* Floating WhatsApp Button */}
+      <motion.a
+        href={`https://wa.me/213775643433?text=${encodeURIComponent(t.whatsappText)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        whileHover={{ scale: 1.1 }}
+        className={`fixed bottom-8 ${lang === 'ar' ? 'right-8' : 'left-8'} z-[60] w-16 h-16 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-2xl`}
+      >
+        <MessageCircle size={32} fill="currentColor" />
+        <span className={`absolute -top-2 ${lang === 'ar' ? '-left-2' : '-right-2'} bg-brand text-[8px] font-bold px-2 py-1 rounded-full animate-pulse shadow-lg shadow-brand/50`}>{t.contactNow}</span>
+      </motion.a>
+
+      {/* Hero Section */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden bg-bg-deep">
+        <DigitalGrid />
+        <NetworkParticles />
+        <FloatingDigitalIcons />
+        <DashboardWidget />
+
+        <div className="container mx-auto px-6 z-10 text-center">
+          <div className="flex flex-col items-center">
+            <motion.div
+              initial={{ opacity: 0, y: 100 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+              className="relative"
+            >
+              {/* Huge Glow Effect */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-brand/15 blur-[120px] rounded-full animate-pulse-glow" />
+
+              <h1 className="text-[14vw] md:text-[12vw] font-black leading-none tracking-tighter uppercase relative drop-shadow-[0_0_30px_rgba(240,112,32,0.3)]">
+                HIZOU
               </h1>
-              <p className="text-xl text-white/60 mb-10 max-w-lg leading-relaxed">
-                وكالة HIZOU للتسويق الرقمي — نتائج حقيقية، استراتيجية ذكية، ونمو لا يتوقف لعملك في الفضاء الرقمي.
-              </p>
               
-              <div className="flex flex-wrap gap-4">
-                <button className="bg-brand hover:brightness-110 text-white px-8 py-4 rounded-full font-bold text-lg transition-all shadow-lg shadow-brand/20">
-                  ابدأ الآن
-                </button>
-                <button className="border-2 border-brand text-brand hover:bg-brand/5 px-8 py-4 rounded-full font-bold text-lg transition-all">
-                  شاهد أعمالنا
-                </button>
+              <div className="mt-4 text-4xl md:text-7xl font-black text-white flex flex-col items-center gap-4">
+                <TypingText texts={t.heroTexts} />
               </div>
 
-              <div className="mt-16 grid grid-cols-3 gap-8 border-r-4 border-brand pr-6">
-                <div>
-                  <div className="text-3xl font-black text-white"><Counter end={120} suffix="+" /></div>
-                  <div className="text-sm text-white/40">حملة إعلانية</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-black text-white"><Counter end={50} suffix="+" /></div>
-                  <div className="text-sm text-white/40">عميل سعيد</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-black text-brand"><Counter end={300} suffix="%" /></div>
-                  <div className="text-sm text-white/40">متوسط نمو</div>
-                </div>
-              </div>
-            </div>
-          </Reveal>
-
-          <Reveal delay={200}>
-            <div className="relative group">
-              <div className="absolute inset-0 bg-brand/20 blur-3xl group-hover:bg-brand/30 transition-all rounded-full"></div>
-              <div className="relative bg-bg-surface border border-white/10 rounded-3xl p-4 overflow-hidden shadow-2xl">
-                <img 
-                  src="https://picsum.photos/seed/marketing/800/800" 
-                  alt="Marketing Strategy" 
-                  className="rounded-2xl w-full h-auto object-cover aspect-square grayscale hover:grayscale-0 transition-all duration-700"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* --- Social Proof Bar --- */}
-      <div className="bg-bg-surface py-10 overflow-hidden border-y border-white/5">
-        <div className="max-w-7xl mx-auto px-6 mb-6 text-center">
-          <p className="text-white/40 text-sm font-medium">وثق بنا أكثر من 50 مشروع في الجزائر والمنطقة العربية</p>
-        </div>
-        <div className="flex whitespace-nowrap animate-marquee">
-          {[1, 2, 3, 4, 5, 1, 2, 3, 4, 5].map((i, idx) => (
-            <div key={idx} className="mx-12 text-2xl font-black text-white/10 uppercase tracking-widest">
-              Company Placeholder {i}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* --- Services --- */}
-      <section id="services" className="py-24 bg-bg-deep">
-        <div className="max-w-7xl mx-auto px-6">
-          <Reveal>
-            <div className="mb-16">
-              <h2 className="text-4xl font-black mb-4">ماذا نفعل لك؟</h2>
-              <div className="w-24 h-1.5 bg-brand rounded-full"></div>
-            </div>
-          </Reveal>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { title: 'إدارة السوشيال ميديا', icon: <Icons.Services.SocialMedia />, desc: 'بناء مجتمع متفاعل ومحتوى يخطف الأنظار.' },
-              { title: 'إعلانات Meta & Google', icon: <Icons.Services.Ads />, desc: 'حملات ممولة مدروسة للوصول لجمهورك المثالي.' },
-              { title: 'تصميم الهوية البصرية', icon: <Icons.Services.Design />, desc: 'خلق انطباع أول لا يُنسى لعلامتك التجارية.' },
-              { title: 'إنتاج محتوى إبداعي', icon: <Icons.Services.Content />, desc: 'فيديوهات وتصاميم تحكي قصة نجاحك.' },
-              { title: 'تحسين محركات البحث SEO', icon: <Icons.Services.SEO />, desc: 'تصدر نتائج البحث العضوية وزيادة الزيارات.' },
-              { title: 'بناء المواقع والمتاجر', icon: <Icons.Services.Web />, desc: 'تجربة مستخدم سلسة تحول الزوار لعملاء.' }
-            ].map((service, idx) => (
-              <Reveal key={idx} delay={idx * 100}>
-                <div className="bg-bg-surface border border-white/5 p-8 rounded-3xl hover:border-brand/50 transition-all group hover:-translate-y-2 duration-300">
-                  <div className="text-brand mb-6 transform group-hover:scale-110 transition-transform">{service.icon}</div>
-                  <h3 className="text-xl font-bold mb-3">{service.title}</h3>
-                  <p className="text-white/50 leading-relaxed">{service.desc}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* --- Why HIZOU --- */}
-      <section id="why-hizou" className="py-24 bg-gradient-to-b from-bg-deep to-bg-surface">
-        <div className="max-w-7xl mx-auto px-6">
-          <Reveal>
-            <div className="text-center mb-20">
-              <h2 className="text-4xl font-black mb-4">لماذا HIZOU؟</h2>
-              <p className="text-white/40">نحن لا نبيع وعوداً، بل نصنع واقعاً رقمياً جديداً</p>
-            </div>
-          </Reveal>
-
-          <div className="grid md:grid-cols-3 gap-12">
-            {[
-              { title: 'نتائج مضمونة بالأرقام', desc: 'نعتمد على البيانات والتحليلات لقياس كل خطوة وتحقيق أهدافك البيعية.' },
-              { title: 'فريق متخصص لكل قطاع', desc: 'خبراء في كل مجال يعملون معاً لتقديم حلول متكاملة ومبتكرة.' },
-              { title: 'تواصل مباشر ومستمر', desc: 'نحن شركاؤك في النجاح، تواصل شفاف وتقارير دورية تبقيك في الصورة.' }
-            ].map((item, idx) => (
-              <Reveal key={idx} delay={idx * 150}>
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-brand/10 text-brand rounded-2xl flex items-center justify-center mx-auto mb-6">
-                    <Icons.Chevron />
-                  </div>
-                  <h3 className="text-xl font-bold mb-4">{item.title}</h3>
-                  <p className="text-white/50 leading-relaxed">{item.desc}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* --- Case Study --- */}
-      <section id="case-study" className="py-24 bg-bg-deep">
-        <div className="max-w-7xl mx-auto px-6">
-          <Reveal>
-            <div className="bg-bg-surface rounded-[40px] overflow-hidden border border-white/5 flex flex-col lg:flex-row">
-              <div className="lg:w-1/2 p-12 flex flex-col justify-center">
-                <div className="inline-block bg-brand/10 text-brand px-4 py-1 rounded-full text-xs font-bold mb-6 uppercase tracking-widest">
-                  دراسة حالة ناجحة
-                </div>
-                <h2 className="text-3xl md:text-4xl font-black mb-6">متجر إلكتروني في الجزائر</h2>
-                <p className="text-white/60 mb-10 leading-relaxed">
-                  قمنا بإعادة هيكلة الاستراتيجية الإعلانية وتحسين تجربة المستخدم، مما أدى لنتائج غير مسبوقة في وقت قياسي.
+            </motion.div>
+            
+            <div className="mt-16 flex flex-col items-center gap-12">
+              <Reveal delay={0.8}>
+                <p className="max-w-md text-sm md:text-base uppercase tracking-[0.3em] font-medium text-white/80 drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
+                  {t.heroSub}
                 </p>
-                
-                <div className="grid grid-cols-3 gap-6 mb-10">
-                  <div className="bg-bg-deep/50 p-4 rounded-2xl border border-white/5">
-                    <div className="text-2xl font-black text-brand">+280%</div>
-                    <div className="text-xs text-white/40">نمو المبيعات</div>
-                  </div>
-                  <div className="bg-bg-deep/50 p-4 rounded-2xl border border-white/5">
-                    <div className="text-2xl font-black text-brand">×4</div>
-                    <div className="text-xs text-white/40">عائد الإعلانات</div>
-                  </div>
-                  <div className="bg-bg-deep/50 p-4 rounded-2xl border border-white/5">
-                    <div className="text-2xl font-black text-brand">3</div>
-                    <div className="text-xs text-white/40">أشهر فقط</div>
-                  </div>
-                </div>
+              </Reveal>
+              
+              <div className={`flex flex-col ${lang === 'ar' ? 'md:flex-row-reverse' : 'md:flex-row'} items-center gap-8 md:gap-12`}>
+                <Reveal delay={1}>
+                  <motion.a
+                    href="#services"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    animate={{ 
+                      boxShadow: ["0 0 0 0px rgba(240, 112, 32, 0.4)", "0 0 0 20px rgba(240, 112, 32, 0)", "0 0 0 0px rgba(240, 112, 32, 0)"]
+                    }}
+                    transition={{ 
+                      duration: 2, 
+                      repeat: Infinity, 
+                      ease: "easeInOut" 
+                    }}
+                    className="relative px-12 py-6 bg-brand text-white text-xs font-black uppercase tracking-[0.2em] rounded-full hover:bg-white hover:text-bg-deep transition-all duration-500 flex items-center gap-4 group overflow-hidden shadow-2xl shadow-brand/40"
+                  >
+                    <motion.span 
+                      animate={{ 
+                        scale: [1, 1.5, 1],
+                        opacity: [0.3, 0, 0.3] 
+                      }}
+                      transition={{ 
+                        duration: 2, 
+                        repeat: Infinity, 
+                        ease: "easeInOut" 
+                      }}
+                      className="absolute inset-0 bg-white/20 rounded-full"
+                    />
+                    <span className="relative z-10">{t.discoverServices}</span>
+                    {lang === 'ar' ? (
+                      <ArrowLeft size={16} className="relative z-10 group-hover:-translate-x-2 transition-transform" />
+                    ) : (
+                      <ChevronRight size={16} className="relative z-10 group-hover:translate-x-2 transition-transform" />
+                    )}
+                  </motion.a>
+                </Reveal>
 
-                <div className="flex items-center gap-4 border-t border-white/5 pt-8">
-                  <img src="https://picsum.photos/seed/avatar1/100/100" alt="Client" className="w-12 h-12 rounded-full grayscale" referrerPolicy="no-referrer" />
-                  <div>
-                    <div className="text-sm font-bold">"هيزو غيروا مفهومنا عن التسويق، النتائج كانت أسرع مما توقعنا."</div>
-                    <div className="text-xs text-white/40 mt-1">مدير المتجر</div>
-                  </div>
-                </div>
-              </div>
-              <div className="lg:w-1/2 relative min-h-[400px]">
-                <img 
-                  src="https://picsum.photos/seed/case/1200/800" 
-                  alt="Case Study" 
-                  className="absolute inset-0 w-full h-full object-cover grayscale opacity-50"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-bg-surface via-transparent to-transparent lg:block hidden"></div>
+                <Reveal delay={1.2}>
+                  <motion.a
+                    href="#contact"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-12 py-6 border border-white/20 text-white text-xs font-black uppercase tracking-[0.2em] rounded-full hover:bg-white hover:text-bg-deep transition-all duration-500 flex items-center gap-4 group"
+                  >
+                    <span className="relative z-10">{t.bookPhotoshoot}</span>
+                    <Camera size={16} className="relative z-10 group-hover:rotate-12 transition-transform" />
+                  </motion.a>
+                </Reveal>
               </div>
             </div>
+          </div>
+        </div>
+
+        <motion.div 
+          style={{ opacity }}
+          className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4"
+        >
+          <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-white/40">{t.scrollDown}</span>
+          <div className="w-[1px] h-12 bg-gradient-to-b from-brand to-transparent" />
+        </motion.div>
+      </section>
+
+      {/* About Section (Shortened) */}
+      <section className="py-12 bg-bg-deep relative overflow-hidden text-center">
+        <div className="container mx-auto px-6">
+          <Reveal>
+            <p 
+              className="text-xl md:text-2xl text-white/80 font-medium leading-relaxed max-w-3xl mx-auto"
+              dangerouslySetInnerHTML={{ __html: t.aboutText }}
+            />
           </Reveal>
         </div>
       </section>
 
-      {/* --- Testimonials --- */}
-      <section className="py-24 bg-bg-deep">
-        <div className="max-w-7xl mx-auto px-6">
-          <Reveal>
-            <div className="text-center mb-16">
-              <h2 className="text-4xl font-black mb-4">ماذا يقول عملاؤنا؟</h2>
-            </div>
-          </Reveal>
+      <div className="h-2 w-full bg-brand" />
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {[1, 2, 3].map((i) => (
-              <Reveal key={i} delay={i * 100}>
-                <div className="bg-bg-surface p-8 rounded-3xl border border-white/5 relative">
-                  <div className="flex gap-1 mb-6">
-                    {[1, 2, 3, 4, 5].map(s => <Icons.Star key={s} />)}
-                  </div>
-                  <p className="text-white/70 mb-8 leading-relaxed italic">
-                    "تجربة استثنائية مع فريق هيزو. الاحترافية في التعامل والدقة في المواعيد كانت أهم ما يميزهم، بالإضافة للنتائج المبهرة."
-                  </p>
-                  <div className="flex items-center gap-4">
-                    <img src={`https://picsum.photos/seed/user${i}/100/100`} alt="User" className="w-12 h-12 rounded-full" referrerPolicy="no-referrer" />
-                    <div>
-                      <div className="font-bold">أحمد محمد</div>
-                      <div className="text-xs text-white/40">رائد أعمال</div>
-                    </div>
-                  </div>
-                </div>
+      {/* Stats Section (Bento Grid) */}
+      <section className="py-32 bg-bg-deep relative overflow-hidden">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-auto md:h-[600px]">
+            <motion.div 
+              whileHover={{ scale: 0.98 }}
+              className="md:col-span-2 md:row-span-2 bg-brand p-12 rounded-[40px] flex flex-col justify-between relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:rotate-12 transition-transform">
+                <Sparkles size={120} />
+              </div>
+              <div className="relative z-10">
+                <div className="text-8xl md:text-12xl font-black text-white tracking-tighter mb-4">+200</div>
+                <div className="text-xl font-black text-bg-deep uppercase tracking-widest">{t.projectsDelivered}</div>
+              </div>
+              <div className="text-sm font-medium text-white/60 max-w-xs">
+                {t.experienceText}
+              </div>
+            </motion.div>
+
+            <motion.div 
+              whileHover={{ scale: 0.98 }}
+              className="bg-bg-surface p-8 rounded-[40px] border border-white/5 flex flex-col justify-center items-center text-center group"
+            >
+              <div className="text-5xl font-black text-brand mb-2">+50</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-white/40">{t.happyClients}</div>
+            </motion.div>
+
+            <motion.div 
+              whileHover={{ scale: 0.98 }}
+              className="bg-bg-surface p-8 rounded-[40px] border border-white/5 flex flex-col justify-center items-center text-center group"
+            >
+              <div className="text-5xl font-black text-brand mb-2">29.8K</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-white/40">{t.followers}</div>
+            </motion.div>
+
+            <motion.div 
+              whileHover={{ scale: 0.98 }}
+              className="bg-bg-surface p-8 rounded-[40px] border border-white/5 flex flex-col justify-center items-center text-center group"
+            >
+              <div className="text-5xl font-black text-brand mb-2">3+</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-white/40">{t.yearsExperience}</div>
+            </motion.div>
+
+            <motion.div 
+              whileHover={{ scale: 0.98 }}
+              className="md:col-span-2 bg-white p-12 rounded-[40px] flex items-center justify-between group overflow-hidden relative"
+            >
+              <div className="absolute inset-0 bg-brand/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10">
+                <div className="text-4xl font-black text-bg-deep mb-2">{t.ourTeam}</div>
+                <div className="text-sm font-medium text-bg-deep/60">{t.teamDesc}</div>
+              </div>
+              <div className={`relative z-10 w-16 h-16 bg-brand rounded-full flex items-center justify-center text-white ${lang === 'fr' ? 'rotate-180' : ''}`}>
+                <ArrowUpRight size={32} />
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Services Grid */}
+      <section id="services" className="py-32 relative bg-bg-surface text-white overflow-hidden">
+        <div className="absolute inset-0 opacity-10 grid-lines" />
+        <div className="container mx-auto px-6">
+          <div className={`flex flex-col md:flex-row-reverse justify-between items-end mb-24 gap-8 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
+            <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
+              <Reveal>
+                <span className="text-xs font-black uppercase tracking-[0.3em] text-brand mb-4 block">({t.services})</span>
               </Reveal>
+              <Reveal delay={0.2}>
+                <h2 className="text-6xl md:text-8xl font-black leading-tight">
+                  {lang === 'ar' ? (
+                    <>رؤية <span className="text-stroke-orange">متكاملة</span> <br /> للنمو الرقمي</>
+                  ) : (
+                    <>Une vision <span className="text-stroke-orange">intégrée</span> <br /> pour la croissance</>
+                  )}
+                </h2>
+              </Reveal>
+            </div>
+            <Reveal delay={0.4}>
+              <p className="max-w-xs text-sm text-text-muted font-medium leading-relaxed">
+                {t.servicesSub}
+              </p>
+            </Reveal>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+            {services.map((service, i) => (
+              <motion.div
+                key={service.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className={`bg-bg-deep p-12 group hover:bg-brand/10 transition-all duration-500 relative overflow-hidden ${lang === 'ar' ? 'text-right' : 'text-left'} rounded-[40px] border border-bg-border shadow-2xl ${
+                  i === 0 ? 'md:col-span-8' : 
+                  i === 1 ? 'md:col-span-4' : 
+                  i === 2 ? 'md:col-span-4' : 
+                  i === 3 ? 'md:col-span-8' : 
+                  'md:col-span-6'
+                }`}
+              >
+                <div className="absolute inset-0 z-0 opacity-20 group-hover:opacity-40 transition-opacity duration-700">
+                  <img 
+                    src={service.image} 
+                    alt={service.title} 
+                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-bg-deep via-bg-deep/80 to-transparent" />
+                </div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-brand/5 blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-brand/10 transition-colors duration-500" />
+                <div className={`relative z-10 flex justify-between items-start mb-12 ${lang === 'ar' ? 'flex-row-reverse' : 'flex-row'}`}>
+                  <div className="text-brand drop-shadow-[0_0_15px_rgba(240,112,32,0.5)] group-hover:scale-110 transition-transform duration-500">
+                    {React.cloneElement(service.icon as React.ReactElement, { size: 48 })}
+                  </div>
+                  <span className="text-[12px] font-black text-white/20 group-hover:text-brand/40 transition-colors">{service.number}</span>
+                </div>
+                <h3 className={`relative z-10 text-3xl font-black mb-4 group-hover:${lang === 'ar' ? 'translate-x-[-10px]' : 'translate-x-[10px]'} transition-transform duration-500`}>{service.title}</h3>
+                <p className="relative z-10 text-sm text-text-muted font-medium leading-relaxed">
+                  {service.description}
+                </p>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* --- Final CTA --- */}
-      <section id="contact" className="py-24 bg-brand relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-           <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-             <path d="M0 100 L100 0 L100 100 Z" fill="white" />
-           </svg>
-        </div>
-        
-        <div className="max-w-4xl mx-auto px-6 relative z-10">
-          <Reveal>
-            <div className="text-center mb-12">
-              <h2 className="text-5xl md:text-7xl font-black text-white mb-6">جاهز تنطلق؟ نحن هنا</h2>
-              <p className="text-white/80 text-lg">اترك لنا تفاصيل مشروعك وسنتواصل معك خلال 24 ساعة</p>
-            </div>
-          </Reveal>
+      {/* Testimonials Section */}
+      <section id="testimonials" className="py-32 bg-bg-deep border-t border-white/5 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-5 grid-lines" />
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-24">
+            <Reveal width="100%">
+              <span className="text-xs font-bold uppercase tracking-[0.3em] text-brand mb-4 block">({t.whatTheySay})</span>
+            </Reveal>
+            <Reveal width="100%" delay={0.2}>
+              <h2 className="text-5xl md:text-7xl font-black">
+                {lang === 'ar' ? (
+                  <>ثقة عملائنا هي <br /> <span className="italic text-brand text-stroke-orange">سر نجاحنا</span></>
+                ) : (
+                  <>La confiance de nos clients est <br /> <span className="italic text-brand text-stroke-orange">notre succès</span></>
+                )}
+              </h2>
+            </Reveal>
+          </div>
 
-          <Reveal delay={200}>
-            <div className="bg-white p-8 md:p-12 rounded-[32px] shadow-2xl">
-              {formStatus === 'success' ? (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-center py-12"
-                >
-                  <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Icons.Chevron />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, i) => (
+              <motion.div
+                key={testimonial.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className={`p-10 bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl flex flex-col justify-between ${lang === 'ar' ? 'text-right' : 'text-left'}`}
+              >
+                <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
+                  <div className={`mb-8 flex gap-1 ${lang === 'ar' ? 'justify-start' : 'justify-start'}`}>
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} size={16} fill="#F07020" color="#F07020" />
+                    ))}
                   </div>
-                  <h3 className="text-2xl font-bold text-bg-deep mb-2">شكراً لتواصلك!</h3>
-                  <p className="text-gray-500">تم استلام طلبك بنجاح، فريقنا سيتواصل معك قريباً جداً.</p>
-                </motion.div>
+                  <p className="text-xl font-[400] leading-relaxed mb-8 text-white">
+                    "{testimonial.quote}"
+                  </p>
+                </div>
+                <div>
+                  <div className="font-[700] text-lg mb-1 text-white">{testimonial.author}</div>
+                  <div className="text-sm font-[400] text-[#A0A0A0] mb-2">{testimonial.company}</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="h-2 w-full bg-brand" />
+
+      {/* Final CTA Section */}
+      <section className="py-32 bg-brand relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 grid-lines" />
+        <div className="container mx-auto px-6 relative z-10 text-center">
+          <Reveal width="100%">
+            <h2 className="text-6xl md:text-9xl font-black text-white mb-12 leading-tight">
+              {lang === 'ar' ? (
+                <>هل أنت مستعد <br /> <span className="text-bg-deep">للنمو؟</span></>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-bg-deep">الاسم الكامل</label>
-                      <input required type="text" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-brand outline-none text-bg-deep" placeholder="مثال: محمد علي" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-bg-deep">البريد الإلكتروني</label>
-                      <input required type="email" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-brand outline-none text-bg-deep" placeholder="name@company.com" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold text-bg-deep">نوع المشروع</label>
-                    <select className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-brand outline-none text-bg-deep appearance-none">
-                      <option>إدارة سوشيال ميديا</option>
-                      <option>إعلانات ممولة</option>
-                      <option>هوية بصرية</option>
-                      <option>تطوير موقع إلكتروني</option>
-                      <option>أخرى</option>
-                    </select>
-                  </div>
-                  <button 
-                    disabled={formStatus === 'submitting'}
-                    className="w-full bg-brand text-white py-5 rounded-2xl font-black text-xl hover:brightness-110 transition-all disabled:opacity-50"
-                  >
-                    {formStatus === 'submitting' ? 'جاري الإرسال...' : 'أرسل الطلب الآن'}
-                  </button>
-                </form>
+                <>Prêt pour la <br /> <span className="text-bg-deep">croissance ?</span></>
               )}
-            </div>
+            </h2>
+          </Reveal>
+          <Reveal width="100%" delay={0.2}>
+            <p className="text-xl md:text-2xl text-white/80 font-medium mb-16 max-w-2xl mx-auto">
+              {t.ctaSub}
+            </p>
+          </Reveal>
+          <Reveal width="100%" delay={0.4}>
+            <button className="px-16 py-8 bg-bg-deep text-white text-xl font-black uppercase tracking-widest rounded-full hover:bg-white hover:text-bg-deep transition-all duration-500 shadow-2xl">
+              {t.startProject}
+            </button>
           </Reveal>
         </div>
       </section>
 
-      {/* --- Footer --- */}
-      <footer className="bg-[#111] pt-20 pb-10">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-12 mb-16">
-            <div className="col-span-2">
-              <div className="text-3xl font-bold tracking-tighter flex items-center gap-1 mb-6">
-                <span className="text-white">H</span>
-                <span className="text-brand">✦</span>
-                <span className="text-white">IZOU</span>
-              </div>
-              <p className="text-white/40 max-w-sm leading-relaxed">
-                وكالة HIZOU هي شريكك الاستراتيجي للنمو في العصر الرقمي. نحن نجمع بين الإبداع والبيانات لتحقيق نتائج ملموسة.
-              </p>
+      {/* Footer / Contact Section */}
+      <footer id="contact" className="py-32 bg-bg-deep text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-5 grid-lines" />
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24">
+            {/* Contact Form */}
+            <div className="bg-bg-surface p-12 rounded-[40px] shadow-2xl border border-bg-border">
+              <Reveal>
+                <h2 className={`text-5xl md:text-7xl font-black mb-12 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
+                  {lang === 'ar' ? (
+                    <>لنبدأ <span className="text-brand">رحلتك</span></>
+                  ) : (
+                    <>Commençons votre <span className="text-brand">voyage</span></>
+                  )}
+                </h2>
+              </Reveal>
+              
+              <form className={`space-y-8 ${lang === 'ar' ? 'text-right' : 'text-left'}`} onSubmit={(e) => e.preventDefault()}>
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase tracking-widest text-text-muted">{t.fullName}</label>
+                  <input 
+                    type="text" 
+                    placeholder={t.namePlaceholder}
+                    className={`w-full bg-bg-deep border border-bg-border p-6 rounded-2xl focus:ring-2 focus:ring-brand transition-all ${lang === 'ar' ? 'text-right' : 'text-left'} outline-none`}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase tracking-widest text-text-muted">{t.email}</label>
+                  <input 
+                    type="email" 
+                    placeholder="example@gmail.com"
+                    className="w-full bg-bg-deep border border-bg-border p-6 rounded-2xl focus:ring-2 focus:ring-brand transition-all text-right outline-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase tracking-widest text-text-muted">رسالتك</label>
+                  <textarea 
+                    rows={4}
+                    placeholder="كيف يمكننا مساعدتك؟"
+                    className="w-full bg-bg-deep border border-bg-border p-6 rounded-2xl focus:ring-2 focus:ring-brand transition-all text-right resize-none outline-none"
+                  ></textarea>
+                </div>
+                <button className="w-full bg-brand text-white py-6 rounded-2xl font-black text-xl hover:bg-brand/90 transition-all flex items-center justify-center gap-4 group">
+                  <span>إرسال الرسالة</span>
+                  <Send size={24} className="group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform" />
+                </button>
+              </form>
             </div>
-            <div>
-              <h4 className="font-bold mb-6">روابط سريعة</h4>
-              <ul className="space-y-4 text-white/40 text-sm">
-                <li><a href="#" className="hover:text-brand transition-colors">الرئيسية</a></li>
-                <li><a href="#services" className="hover:text-brand transition-colors">خدماتنا</a></li>
-                <li><a href="#case-study" className="hover:text-brand transition-colors">أعمالنا</a></li>
-                <li><a href="#contact" className="hover:text-brand transition-colors">تواصل معنا</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-6">تابعنا</h4>
-              <div className="flex gap-4">
-                <a href="#" className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-brand hover:text-white transition-all"><Icons.Social.Instagram /></a>
-                <a href="#" className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-brand hover:text-white transition-all"><Icons.Social.Facebook /></a>
-                <a href="#" className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-brand hover:text-white transition-all"><Icons.Social.TikTok /></a>
-                <a href="#" className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-brand hover:text-white transition-all"><Icons.Social.LinkedIn /></a>
+
+            {/* Contact Info */}
+            <div className="flex flex-col justify-center text-right">
+              <Reveal>
+                <span className="text-xs font-black uppercase tracking-[0.3em] text-brand mb-6 block">(تواصل معنا)</span>
+              </Reveal>
+              <Reveal delay={0.2}>
+                <h2 className="text-6xl md:text-8xl font-black mb-12 leading-tight">
+                  جاهز <span className="text-stroke-orange">للتألق؟</span>
+                </h2>
+              </Reveal>
+              
+              <div className="space-y-12">
+                <a href="tel:0775643433" className={`flex ${lang === 'ar' ? 'flex-row-reverse' : 'flex-row'} items-center gap-8 group`}>
+                  <div className="w-20 h-20 bg-brand rounded-3xl flex items-center justify-center text-white shadow-xl shadow-brand/20 group-hover:rotate-12 transition-transform">
+                    <Phone size={32} />
+                  </div>
+                  <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
+                    <p className="text-xs font-black text-text-muted uppercase tracking-widest mb-2">{lang === 'ar' ? 'اتصل بنا' : 'Appelez-nous'}</p>
+                    <p className="text-2xl md:text-3xl font-black">0775 64 34 33</p>
+                    <p className="text-2xl md:text-3xl font-black">0549 27 84 11</p>
+                  </div>
+                </a>
+
+                <a href="https://wa.me/213775643433" target="_blank" rel="noopener noreferrer" className={`flex ${lang === 'ar' ? 'flex-row-reverse' : 'flex-row'} items-center gap-8 group`}>
+                  <div className="w-20 h-20 bg-[#25D366] rounded-3xl flex items-center justify-center text-white shadow-xl shadow-[#25D366]/20 group-hover:rotate-12 transition-transform">
+                    <MessageCircle size={32} fill="currentColor" />
+                  </div>
+                  <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
+                    <p className="text-xs font-black text-text-muted uppercase tracking-widest mb-2">{lang === 'ar' ? 'واتساب' : 'WhatsApp'}</p>
+                    <p className="text-2xl md:text-3xl font-black">0775 64 34 33</p>
+                  </div>
+                </a>
+
+                <a href="https://instagram.com/hizou_agency" target="_blank" rel="noopener noreferrer" className={`flex ${lang === 'ar' ? 'flex-row-reverse' : 'flex-row'} items-center gap-8 group`}>
+                  <div className="w-20 h-20 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] rounded-3xl flex items-center justify-center text-white shadow-xl shadow-purple-500/20 group-hover:rotate-12 transition-transform">
+                    <Instagram size={32} />
+                  </div>
+                  <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
+                    <p className="text-xs font-black text-text-muted uppercase tracking-widest mb-2">{lang === 'ar' ? 'إنستغرام' : 'Instagram'}</p>
+                    <p className="text-2xl md:text-3xl font-black">@hizou_agency</p>
+                  </div>
+                </a>
+
+                <a href="https://maps.app.goo.gl/HmBKHNzwatxShhjQ8" target="_blank" rel="noopener noreferrer" className={`flex ${lang === 'ar' ? 'flex-row-reverse' : 'flex-row'} items-center gap-8 group`}>
+                  <div className="w-20 h-20 bg-brand rounded-3xl flex items-center justify-center text-white shadow-xl shadow-brand/20 group-hover:rotate-12 transition-transform">
+                    <MapPin size={32} />
+                  </div>
+                  <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
+                    <p className="text-xs font-black text-text-muted uppercase tracking-widest mb-2">{lang === 'ar' ? 'موقعنا' : 'Notre emplacement'}</p>
+                    <p className="text-2xl md:text-3xl font-black">Said Hamdine, Algiers</p>
+                  </div>
+                </a>
               </div>
             </div>
           </div>
-          <div className="border-t border-white/5 pt-10 text-center text-white/20 text-xs">
-            © 2025 HIZOU agency — جميع الحقوق محفوظة
+          <div className={`pt-12 border-t border-white/10 flex flex-col ${lang === 'ar' ? 'md:flex-row-reverse' : 'md:flex-row'} justify-between items-center gap-8 mt-24`}>
+            <div className="flex items-center">
+              <div style={{
+                background: 'white',
+                borderRadius: '12px',
+                padding: '4px 10px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              }}>
+                <img 
+                  src="https://i.imgur.com/QZigE0P.png" 
+                  alt="HIZOU Agency"
+                  style={{
+                    height: '30px',
+                    width: 'auto',
+                    display: 'block',
+                  }}
+                />
+              </div>
+            </div>
+            <p className="text-[10px] uppercase tracking-widest font-black text-text-muted">
+              {lang === 'ar' ? '© 2025 وكالة HIZOU — الجزائر. جميع الحقوق محفوظة.' : '© 2025 Agence HIZOU — Algérie. Tous droits réservés.'}
+            </p>
+            <div className="flex gap-8">
+              <a href="#" className="text-[10px] uppercase tracking-widest font-black text-text-muted hover:text-brand">{lang === 'ar' ? 'سياسة الخصوصية' : 'Politique de confidentialité'}</a>
+              <a href="#" className="text-[10px] uppercase tracking-widest font-black text-text-muted hover:text-brand">{lang === 'ar' ? 'الشروط والأحكام' : 'Termes et conditions'}</a>
+            </div>
           </div>
         </div>
       </footer>
 
-      {/* --- Floating Elements --- */}
-      <a 
-        href="https://wa.me/yournumber" 
-        target="_blank" 
-        rel="noreferrer"
-        className="fixed bottom-8 right-8 z-50 bg-[#25D366] text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform"
-      >
-        <Icons.Social.WhatsApp />
-      </a>
-
-      {showBackToTop && (
-        <button 
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-28 right-8 z-50 bg-bg-surface text-white p-4 rounded-full border border-white/10 shadow-2xl hover:bg-brand transition-colors"
-        >
-          <Icons.Chevron />
-        </button>
-      )}
+      <Chatbot lang={lang} />
     </div>
   );
 }
